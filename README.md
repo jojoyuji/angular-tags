@@ -6,13 +6,13 @@ Pure AngularJS tagging widget with typeahead support courtesy of [ui-bootstrap](
 Current Version
 ---------------
 ```
-0.3.1
+0.4.1
 ```
 
 Installation
 ------------
 ```
-bower install angular-tags
+bower install jojo-angular-tags
 ```
 
 Requirements
@@ -242,3 +242,4 @@ Authors
 =======
 
 Carl Dougan (@carlsgit) and Christopher Hiller (@boneskull)
+Modified by Jonatas Hashimoto (@jojoyuji) (this version :D)
