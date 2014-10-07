@@ -4,7 +4,7 @@
   "main": "dist/angular-tags-0.3.0.js",
   "dependencies": {
     "angular-ui-bootstrap-bower": "~0.6.0",
-    "angular": "1.2.0-rc.1",
+    "angular": "~1.2.26",
     "font-awesome": "~3.2.1",
     "bootstrap-css": "~3.0.0"
   },
