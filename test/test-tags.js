@@ -288,10 +288,5 @@
       }
     ]), 'src tags are restored correctly');
 
-
-
-
   });
-
-
 })();

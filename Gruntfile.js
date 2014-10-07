@@ -135,7 +135,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('test',
-    ['build', 'bower:install', 'connect', 'qunit']);
+    ['build',  'connect', 'qunit']);
   grunt.registerTask('build', ['less', 'html2js', 'copy', 'concat', 'uglify']);
   grunt.registerTask('default', ['build']);
 

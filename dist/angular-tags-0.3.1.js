@@ -2,6 +2,17 @@
 (function () {
   'use strict';
 
+  var splitter = function(string, separators){
+    if(!Array.isArray(separators)){
+      return string.split(separators);
+    }
+    //verifies if there's bad regex chars
+    separators.forEach( function(s){
+      s = s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    });
+    return  string.split(new RegExp(separators.join('|'), 'g'));
+  };
+
   try {
     angular.module('decipher.tags.templates');
   } catch (e) {
@@ -174,14 +185,22 @@
          restrict: 'C',
          require: 'ngModel',
          link: function (scope, element, attrs, ngModel) {
-           var delimiterRx = new RegExp('^' +
-                                        scope.options.delimiter +
-                                        '+$'),
+          var delimiterRx;
+
+           if(angular.isArray(scope.options.delimiter)){
+             delimiterRx = [];
+             angular.forEach(scope.options.delimiter, function(i){
+              delimiterRx.push(new RegExp('^' + i + '+$'));
+             });
+           }
+           else{
+            delimiterRx = new RegExp('^' + scope.options.delimiter + '+$');
+           }
 
              /**
               * Cancels the text input box.
               */
-               cancel = function cancel() {
+               var cancel = function cancel() {
                ngModel.$setViewValue('');
                ngModel.$render();
              },
@@ -191,8 +210,15 @@
               * @param value
               */
                addTag = function addTag(value) {
-               if (value) {
-                 if (value.match(delimiterRx)) {
+                if (value) {
+                 if(angular.isArray(delimiterRx)){
+                   angular.forEach(delimiterRx, function(i){
+                     if(value.match(i)){
+                       cancel();
+                        return ;
+                     }
+                   });
+                  }else if (value.match(delimiterRx)) {
                    cancel();
                    return;
                  }
@@ -241,6 +267,7 @@
            element.bind('focus', function () {
              // this avoids what looks like a bug in typeahead.  It seems
              // to be calling element[0].focus() somewhere within a digest loop.
+             // a
              if ($rootScope.$$phase) {
                delete scope.toggles.selectedTag;
              } else {
@@ -249,6 +276,12 @@
                });
              }
            });
+           /**
+            * When blur adds the tag :D
+            */
+           element.bind('blur', function () {
+              addTag(ngModel.$viewValue);
+           });
 
            /**
             * Detects the delimiter.
@@ -256,8 +289,17 @@
            element.bind('keypress',
              function (evt) {
                scope.$apply(function () {
-                 if (scope.options.delimiter.charCodeAt() ===
-                     evt.which) {
+                 if(angular.isArray(scope.options.delimiter)){
+                   angular.forEach(scope.options.delimiter, function(i, index){
+                     if(i.charCodeAt() === evt.which){
+                       evt.preventDefault();
+                       addTag(ngModel.$viewValue);
+                     }
+
+                   });
+                 }
+                 else if (scope.options.delimiter.charCodeAt() === evt.which) {
+
                    addTag(ngModel.$viewValue);
                  }
                });
@@ -272,11 +314,8 @@
                scope.$apply(function () {
                  // to "complete" a tag
 
-                 if (kcCompleteTag.indexOf(evt.which) >=
-                     0) {
+                 if (kcCompleteTag.indexOf(evt.which) >= 0) {
                    addTag(ngModel.$viewValue);
-
-                   // or if you want to get out of the text area
                  } else if (kcCancelInput.indexOf(evt.which) >=
                             0 && !evt.isPropagationStopped()) {
                    cancel();
@@ -317,11 +356,13 @@
             * Detects a paste or someone jamming on the delimiter key.
             */
            ngModel.$parsers.unshift(function (value) {
-             var values = value.split(scope.options.delimiter);
+
+             var values;
+            values = splitter(value, scope.options.delimiter);
              if (values.length > 1) {
                addTags(values);
              }
-             if (value.match(delimiterRx)) {
+             if (value.match(delimiterRx )  ) {
                element.val('');
                return;
              }
@@ -452,7 +493,7 @@
                      }
                    }
                    else {
-                     scope.model.length = 0;
+                     scope.model = [];
                      for (i = 0; i < value.length; i++) {
                        scope.model.push(value[i]);
                      }
@@ -474,13 +515,18 @@
                  return;
                }
                if (angular.isString(value)) {
-                 arr = value
-                   .split(scope.options.delimiter)
-                   .map(function (item) {
+                 if( angular.isArray(scope.options.delimiter)){
+
+                 }
+                 else{
+
+                 arr = splitter(value, scope.options.delimiter);
+                 arr = arr.map(function (item) {
                      return {
                        name: item.trim()
                      };
                    });
+                 }
                }
                else if (angular.isArray(value)) {
                  arr = value.map(function (item) {
